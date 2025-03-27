@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Recipe Finder</h1>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search recipes...">
+            <button id="search-btn">Search</button>
+        </div>
+    </header>
+    
+    <main>
+        <div id="landing-page">
+            <h2>Discover Delicious Recipes</h2>
+            <p>Search for your favorite meals or browse popular recipes</p>
+        </div>
+        
+        <div id="recipe-container" class="hidden">
+            <h2 id="recipe-title">Potato Dumplings</h2>
+            <div class="recipe-content">
+                <div class="recipe-image">
+                    <img id="recipe-img" src="" alt="Recipe image">
+                </div>
+                <div class="recipe-details">
+                    <h3>Ingredients</h3>
+                    <ul id="ingredients-list"></ul>
+                    
+                    <h3>Instructions</h3>
+                    <ol id="instructions-list"></ol>
+                    
+                    <button id="back-btn">Back to Search</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="search-results" class="hidden"></div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2023 Recipe Finder App. All rights reserved.</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

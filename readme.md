@@ -17,7 +17,7 @@ The **Recipe Finder App** is a web-based application that helps users discover n
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Rubil-Mogere-94/recipe_finder.git
+   git clone git@github.com:Rubil-Mogere-94/recipe_finder.git
    ```
 2. Navigate to the project directory:
    ```bash

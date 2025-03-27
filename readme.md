@@ -37,7 +37,7 @@ The **Recipe Finder App** is a web-based application that helps users discover n
 
 ## Author
 **Rubil**  
-Email: your-email@example.com  
+Email: mogererubil@gmail.com  
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

@@ -12,7 +12,7 @@ The **Recipe Finder App** is a web-based application that helps users discover n
 ## Technologies Used
 - **Frontend**: HTML, CSS, JavaScript
 - **Styling**: CSS (custom styles)
-- **API**: Fetches recipes from an external recipe API
+- **API**: Mealdb api
 
 ## Installation
 1. Clone the repository:

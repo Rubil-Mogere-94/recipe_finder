@@ -12,6 +12,8 @@
         <div class="search-container">
             <input type="text" id="search-input" placeholder="Search recipes...">
             <button id="search-btn">Search</button>
+            <button id="show-favorites-btn">My Favorites</button>
+
         </div>
     </header>
     
@@ -19,6 +21,11 @@
         <div id="landing-page">
             <h2>Discover Delicious Recipes</h2>
             <p>Search for your favorite meals or browse popular recipes</p>
+        </div>
+        <div id="favorites-container" class="hidden">
+            <h2>My Favorite Recipes</h2>
+            <div id="favorites-list"></div>
+            <button id="back-from-favorites-btn">Back to Search</button>
         </div>
         
         <div id="recipe-container" class="hidden">

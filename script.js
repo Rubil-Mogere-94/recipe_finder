@@ -10,16 +10,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const favoritesList = document.getElementById('favorites-list');
     const backFromFavoritesBtn = document.getElementById('back-from-favorites-btn');
     const categoryFilter = document.getElementById('category-filter');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const recentSearchesContainer = document.getElementById('recent-searches');
 
-    // Initialize favorites from localStorage
+    // Initialize state
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     let currentPage = 1;
     const resultsPerPage = 6;
+    const API_CACHE = {};
+    const MAX_RECENT_SEARCHES = 5;
+    let recentSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
 
     // Event Listeners
     searchBtn.addEventListener('click', handleSearch);
     showFavoritesBtn.addEventListener('click', showFavorites);
     backFromFavoritesBtn.addEventListener('click', showLandingPage);
+    darkModeToggle.addEventListener('click', toggleDarkMode);
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSearch();
     });
@@ -28,18 +39,38 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchRandomRecipe();
     loadCategories();
     displayCategoryBrowser();
+    displayRecentSearches();
 
     // Main search function
     async function handleSearch() {
         const query = searchInput.value.trim();
         const category = categoryFilter.value;
         
+        // Add to recent searches
+        if (query && !recentSearches.includes(query)) {
+            recentSearches.unshift(query);
+            if (recentSearches.length > MAX_RECENT_SEARCHES) {
+                recentSearches.pop();
+            }
+            localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+            displayRecentSearches();
+        }
+        
         try {
-            // Add loading state
+            // Show loading state
             searchBtn.disabled = true;
             searchBtn.textContent = 'Searching...';
-            searchResults.innerHTML = '<div class="loading-spinner"></div>';
+            showLoadingSkeleton();
             showView(searchResults);
+            
+            // Check cache first
+            const cacheKey = `${query}-${category}`;
+            if (API_CACHE[cacheKey]) {
+                displaySearchResults(API_CACHE[cacheKey]);
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+                return;
+            }
             
             let url;
             if (category && !query) {
@@ -54,11 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const data = await response.json();
             
-            // Reset button state
-            searchBtn.disabled = false;
-            searchBtn.textContent = 'Search';
-            
             if (data.meals) {
+                API_CACHE[cacheKey] = data.meals;
                 displaySearchResults(data.meals);
             } else {
                 searchResults.innerHTML = '<p class="no-results">No recipes found. Try another search.</p>';
@@ -73,9 +101,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             showView(searchResults);
+        } finally {
             searchBtn.disabled = false;
             searchBtn.textContent = 'Search';
         }
+    }
+
+    function showLoadingSkeleton() {
+        searchResults.innerHTML = `
+            <div class="skeleton-container">
+                ${Array(6).fill().map(() => `
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%"></div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function displayRecentSearches() {
+        if (recentSearches.length === 0) {
+            recentSearchesContainer.classList.add('hidden');
+            return;
+        }
+        
+        recentSearchesContainer.innerHTML = `
+            <div class="recent-searches">
+                <h3>Recent Searches</h3>
+                <div class="recent-tags">
+                    ${recentSearches.map(search => `
+                        <span class="recent-tag">${search}</span>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        recentSearchesContainer.classList.remove('hidden');
+        
+        // Add event listeners to recent tags
+        document.querySelectorAll('.recent-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                searchInput.value = tag.textContent;
+                handleSearch();
+            });
+        });
     }
 
     // Display search results
@@ -92,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recipeCard.className = 'recipe-card';
             recipeCard.innerHTML = `
                 <h3>${meal.strMeal}</h3>
-                <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
             `;
             recipeCard.addEventListener('click', () => displayRecipe(meal));
             searchResults.appendChild(recipeCard);
@@ -147,15 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Display single recipe
-    function displayRecipe(meal) {
+    async function displayRecipe(meal) {
         if (!meal) {
             showLandingPage();
             return;
         }
 
         document.getElementById('recipe-title').textContent = meal.strMeal;
-        document.getElementById('recipe-img').src = meal.strMealThumb;
-        document.getElementById('recipe-img').alt = meal.strMeal;
+        const recipeImg = document.getElementById('recipe-img');
+        recipeImg.src = meal.strMealThumb || '';
+        recipeImg.alt = meal.strMeal;
         
         // Add tags and area information
         const tagsArea = document.createElement('div');
@@ -272,7 +344,70 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
+        // Load similar recipes
+        await loadSimilarRecipes(meal.strCategory);
+        
         showView(recipeContainer);
+    }
+
+    async function loadSimilarRecipes(category) {
+        if (!category) return;
+        
+        try {
+            const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
+            const data = await response.json();
+            
+            const similarRecipesContainer = document.getElementById('similar-recipes');
+            const grid = similarRecipesContainer.querySelector('.similar-recipes-grid') || 
+                          document.createElement('div');
+            
+            grid.className = 'similar-recipes-grid';
+            grid.innerHTML = '';
+            
+            if (data.meals) {
+                // Take up to 4 random similar recipes
+                const shuffled = [...data.meals].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 4);
+                
+                selected.forEach(meal => {
+                    const card = document.createElement('div');
+                    card.className = 'similar-recipe-card';
+                    card.innerHTML = `
+                        <h4>${meal.strMeal}</h4>
+                        <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                    `;
+                    card.addEventListener('click', async () => {
+                        const fullMeal = await fetchRecipeById(meal.idMeal);
+                        if (fullMeal) displayRecipe(fullMeal);
+                    });
+                    grid.appendChild(card);
+                });
+                
+                similarRecipesContainer.innerHTML = '<h3>You Might Also Like</h3>';
+                similarRecipesContainer.appendChild(grid);
+                similarRecipesContainer.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading similar recipes:', error);
+            document.getElementById('similar-recipes').classList.add('hidden');
+        }
+    }
+
+    async function fetchRecipeById(id) {
+        try {
+            const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+            const data = await response.json();
+            return data.meals ? data.meals[0] : null;
+        } catch (error) {
+            console.error('Error fetching recipe:', error);
+            return null;
+        }
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
     }
 
     // Show favorites view
@@ -288,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 favoriteCard.innerHTML = `
                     <button class="remove-favorite" data-id="${meal.idMeal}">×</button>
                     <h3>${meal.strMeal}</h3>
-                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
                 `;
                 favoriteCard.addEventListener('click', () => displayRecipe(meal));
                 favoritesList.appendChild(favoriteCard);
@@ -385,45 +520,45 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (data.categories) {
-                categoryBrowser.innerHTML = '<h3>Browse by Category</h3><div class="category-grid"></div>';
-                const grid = categoryBrowser.querySelector('.category-grid');
+                const grid = document.createElement('div');
+                grid.className = 'category-grid';
                 
                 data.categories.forEach(category => {
-                    const categoryCard = document.createElement('div');
-                    categoryCard.className = 'category-card';
-                    categoryCard.innerHTML = `
-                        <img src="${category.strCategoryThumb}" alt="${category.strCategory}">
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+                    card.innerHTML = `
+                        <img src="${category.strCategoryThumb}" alt="${category.strCategory}" loading="lazy">
                         <h4>${category.strCategory}</h4>
                     `;
-                    categoryCard.addEventListener('click', () => {
+                    card.addEventListener('click', () => {
                         categoryFilter.value = category.strCategory;
                         handleSearch();
                     });
-                    grid.appendChild(categoryCard);
+                    grid.appendChild(card);
                 });
+                
+                categoryBrowser.innerHTML = '<h3>Browse by Category</h3>';
+                categoryBrowser.appendChild(grid);
             }
         } catch (error) {
-            console.error('Error loading categories:', error);
+            console.error('Error loading categories for browser:', error);
+            categoryBrowser.innerHTML = '<p>Failed to load categories. Please try again later.</p>';
         }
+    }
+
+    // Helper function to show a specific view and hide others
+    function showView(viewToShow) {
+        [landingPage, recipeContainer, searchResults, favoritesContainer].forEach(view => {
+            if (view === viewToShow) {
+                view.classList.remove('hidden');
+            } else {
+                view.classList.add('hidden');
+            }
+        });
     }
 
     // Show landing page
     function showLandingPage() {
-        landingPage.classList.remove('hidden');
-        recipeContainer.classList.add('hidden');
-        searchResults.classList.add('hidden');
-        favoritesContainer.classList.add('hidden');
-        searchInput.value = '';
-        currentPage = 1;
-    }
-
-    // Helper function to show specific view
-    function showView(view) {
-        landingPage.classList.add('hidden');
-        recipeContainer.classList.add('hidden');
-        searchResults.classList.add('hidden');
-        favoritesContainer.classList.add('hidden');
-        
-        view.classList.remove('hidden');
+        showView(landingPage);
     }
 });

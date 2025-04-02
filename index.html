@@ -8,12 +8,16 @@
 </head>
 <body>
     <header>
-        <h1>Recipe Finder</h1>
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search recipes...">
-            <button id="search-btn">Search</button>
-            <button id="show-favorites-btn">My Favorites</button>
-
+        <div class="header-content">
+            <h1>Recipe Finder</h1>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search recipes...">
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                </select>
+                <button id="search-btn">Search</button>
+                <button id="show-favorites-btn">My Favorites</button>
+            </div>
         </div>
     </header>
     
@@ -21,7 +25,9 @@
         <div id="landing-page">
             <h2>Discover Delicious Recipes</h2>
             <p>Search for your favorite meals or browse popular recipes</p>
+            <div id="category-browser"></div>
         </div>
+        
         <div id="favorites-container" class="hidden">
             <h2>My Favorite Recipes</h2>
             <div id="favorites-list"></div>
@@ -41,7 +47,7 @@
                     <h3>Instructions</h3>
                     <ol id="instructions-list"></ol>
                     
-                    <button id="back-btn">Back to Search</button>
+                    <div class="recipe-actions"></div>
                 </div>
             </div>
         </div>

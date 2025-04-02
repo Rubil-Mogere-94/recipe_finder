@@ -1,7 +1,4 @@
 
-Here's an updated README.md file that better reflects the current state of your Recipe Finder app with all its features:
-
-```markdown
 # Recipe Finder App
 
 ## About the Project

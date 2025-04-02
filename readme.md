@@ -11,7 +11,8 @@ The **Recipe Finder App** is a web-based application that helps users discover n
 - Responsive design for seamless user experience
 
 ## Technologies Used
-- **Frontend**: HTML, CSS, JavaScript
+- **Frontend**: HTML, CSS
+- **Backend**: Javascript
 - **Styling**: CSS (custom styles)
 - **API**: Mealdb API
 

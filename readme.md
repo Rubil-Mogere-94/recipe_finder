@@ -1,3 +1,4 @@
+
 # Recipe Finder App
 
 ## About the Project
@@ -12,7 +13,7 @@ The **Recipe Finder App** is a web-based application that helps users discover n
 ## Technologies Used
 - **Frontend**: HTML, CSS, JavaScript
 - **Styling**: CSS (custom styles)
-- **API**: Mealdb api
+- **API**: Mealdb API
 
 ## Installation
 1. Clone the repository:
@@ -27,13 +28,14 @@ The **Recipe Finder App** is a web-based application that helps users discover n
    ```bash
    open index.html
    ```
-   or use a live server extension for better experience.
+   or use a live server extension for a better experience.
 
 ## Usage
-1. Enter a keyword (e.g., "pasta", "chicken") in the search bar.
-2. Browse the displayed recipes.
-3. Click on a recipe to view detailed instructions.
-4. Save your favorite recipes for later.
+1. Visit the live app: [Recipe Finder](https://recipe-finder-wheat-two.vercel.app/)
+2. Enter a keyword (e.g., "pasta", "chicken") in the search bar.
+3. Browse the displayed recipes.
+4. Click on a recipe to view detailed instructions.
+5. Save your favorite recipes for later.
 
 ## Author
 **Rubil**  
@@ -41,4 +43,6 @@ Email: mogererubil@gmail.com
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
+```
+
 
